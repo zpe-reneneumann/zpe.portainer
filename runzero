@@ -1,0 +1,39 @@
+#
+# Sample Containerfile for running the Rumble Explorer in a container, with screenshot support.
+#
+FROM debian:stable-slim
+
+WORKDIR /opt/rumble
+
+RUN apt update && \
+    apt install -y chromium   # add wireless-tools if you want WiFi scanning
+
+# Set AGENT_URL to be the download URL for your Linux Rumble Explorer. To
+# find your URL, go to https://console.rumble.run/deploy/download/explorers. Select Linux as a target.
+# Get the URL form the deployment instructions to copy it to the clipboard.
+#
+ENV AGENT_URL={{ AGENT_URL }}
+
+# This ID is used to track the explorer even if the container is rebuilt.
+# Set it to a unique 32 character hex ID. You can generate one via:
+#
+# $ openssl rand -hex 16
+#
+ENV RUMBLE_AGENT_HOST_ID={{ HOST_ID }}
+
+# If you need to set environment variables to change the explorer behavior,
+# you can do so via the ENV directive. Example:
+#
+# ENV RUMBLE_AGENT_LOG_DEBUG=true
+
+ADD ${AGENT_URL} rumble-explorer.bin
+
+RUN chmod +x rumble-explorer.bin
+
+# For full functionality the Rumble scanner needs to send and receive raw
+# packets, which requires elevated privileges.
+USER root
+
+# The argument `manual` tells Rumble not to look for SystemD or upstart.
+ENTRYPOINT [ "/opt/rumble/rumble-explorer.bin", "manual"]
+
